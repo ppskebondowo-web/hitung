@@ -76,13 +76,15 @@
     .c-name { font-size: 11px; font-weight: 800; color: #93c5fd; text-transform: uppercase; }
     .c-votes { font-size: 18px; font-weight: 800; color: #ffffff; margin: 4px 0; }
     .c-pct { font-size: 11px; font-weight: 700; color: #34d399; }
-    .tps-status-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 7px; max-height: 40dvh; overflow-y: auto; }
+    .tps-status-grid { display: flex; flex-direction: column; gap: 8px; max-height: 46dvh; overflow-y: auto; padding-right: 2px; }
     .tps-item {
-      background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 9px 10px;
-      display: flex; justify-content: space-between; align-items: center; font-size: 11px;
+      background: #0f172a; border: 1px solid #1e293b; border-radius: 14px; padding: 11px 12px;
+      display: flex; flex-direction: column; gap: 6px; font-size: 11px;
     }
-    .tps-item.done { border-color: rgba(16, 185, 129, 0.4); }
-    .st-badge { padding: 2px 7px; border-radius: 6px; font-size: 10px; font-weight: 700; }
+    .tps-item.done { border-color: rgba(16, 185, 129, 0.45); }
+    .tps-top-row { display: flex; justify-content: space-between; align-items: center; }
+    .tps-meta-row { display: flex; justify-content: space-between; color: #94a3b8; font-size: 10px; border-top: 1px solid #1e293b; padding-top: 5px; }
+    .st-badge { padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; }
     .st-ok { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
     .st-wait { background: rgba(148, 163, 184, 0.15); color: #94a3b8; }
     .footer { text-align: center; font-size: 11px; color: #64748b; padding-top: 10px; }
@@ -218,7 +220,7 @@
       btn.innerText = "...";
       try {
         const domain = atob("aHR0cHM6Ly9kb2NzLmdvb2dsZS5jb20vc3ByZWFkc2hlZXRzL2Qv");
-        const query = encodeURIComponent("SELECT B, M, N, P, Q, R, S OFFSET 0");
+        const query = encodeURIComponent("SELECT B, C, D, E, F, G, H, M, P, Q, R, S OFFSET 0");
         const url = domain + TUNGSURA_SHEET_ID + "/gviz/tq?tqx=out:csv&sheet=hitung&tq=" + query + "&t=" + Date.now();
         
         const res = await fetch(url);
@@ -232,17 +234,23 @@
           const c = lines.at(i).split(',').map(x => x.replace(/^"|"$/g, '').trim());
           const namaTps = c.at(0);
           if (namaTps && namaTps.startsWith("TPS")) {
-            const sah = parseInt(c.at(1), 10) || 0;
-            const c1 = parseInt(c.at(3), 10) || 0;
-            const c2 = parseInt(c.at(4), 10) || 0;
-            const c3 = parseInt(c.at(5), 10) || 0;
-            const waktu = c.at(6) || "";
+            const dptL = parseInt(c.at(1), 10) || 0;
+            const dptP = parseInt(c.at(2), 10) || 0;
+            const dptTot = parseInt(c.at(3), 10) || 0;
+            const phpL = parseInt(c.at(4), 10) || 0;
+            const phpP = parseInt(c.at(5), 10) || 0;
+            const phpTot = parseInt(c.at(6), 10) || 0;
+            const sah = parseInt(c.at(7), 10) || 0;
+            const c1 = parseInt(c.at(8), 10) || 0;
+            const c2 = parseInt(c.at(9), 10) || 0;
+            const c3 = parseInt(c.at(10), 10) || 0;
+            const waktu = c.at(11) || "";
 
             if (waktu !== "") {
               tpsMasuk++;
               sumC1 += c1; sumC2 += c2; sumC3 += c3; sumSah += sah;
             }
-            mapTps[namaTps] = { c1, c2, c3, sah, waktu };
+            mapTps[namaTps] = { dptL, dptP, dptTot, phpL, phpP, phpTot, sah, c1, c2, c3, waktu };
           }
         }
 
@@ -254,20 +262,28 @@
         document.getElementById('pct-c2').innerText = sumSah > 0 ? ((sumC2 / sumSah) * 100).toFixed(1) + "%" : "0.0%";
         document.getElementById('pct-c3').innerText = sumSah > 0 ? ((sumC3 / sumSah) * 100).toFixed(1) + "%" : "0.0%";
 
-        document.getElementById('admin-summary').innerText = `TPS Masuk: ${tpsMasuk}/11 • Total Sah: ${sumSah}`;
+        document.getElementById('admin-summary').innerText = `TPS Masuk: ${tpsMasuk}/11 • Total Sah: ${sumSah.toLocaleString('id-ID')}`;
 
         let gridHtml = "";
         for (let j = 1; j <= 11; j++) {
           const tName = "TPS " + String(j).padStart(3, '0');
           const d = mapTps[tName];
           const isDone = d && d.waktu !== "";
+          const pctHadir = (isDone && d.dptTot > 0) ? ((d.phpTot / d.dptTot) * 100).toFixed(1) : "0.0";
+
           gridHtml += `
             <div class="tps-item ${isDone ? 'done' : ''}">
-              <div>
-                <div style="font-weight:800; color:#e2e8f0;">${tName}</div>
-                <div style="font-size:10px; color:#94a3b8; margin-top:2px;">${isDone ? `Sah: ${d.sah} (${d.c1}/${d.c2}/${d.c3})` : 'Belum mengirim'}</div>
+              <div class="tps-top-row">
+                <div>
+                  <span style="font-weight:800; font-size:13px; color:#38bdf8;">${tName}</span>
+                  <span style="margin-left:8px; color:#e2e8f0; font-weight:700;">${isDone ? `Sah: ${d.sah} (${d.c1} / ${d.c2} / ${d.c3})` : 'Belum mengirim'}</span>
+                </div>
+                <span class="st-badge ${isDone ? 'st-ok' : 'st-wait'}">${isDone ? `Hadir ${pctHadir}%` : 'Proses'}</span>
               </div>
-              <span class="st-badge ${isDone ? 'st-ok' : 'st-wait'}">${isDone ? 'Masuk' : 'Proses'}</span>
+              <div class="tps-meta-row">
+                <span>DPT: <strong style="color:#cbd5e1;">${isDone ? d.dptTot : '-'}</strong> (${isDone ? `L:${d.dptL} | P:${d.dptP}` : '-'})</span>
+                <span>Pemilih: <strong style="color:#34d399;">${isDone ? d.phpTot : '-'}</strong> (${isDone ? `L:${d.phpL} | P:${d.phpP}` : '-'})</span>
+              </div>
             </div>
           `;
         }
