@@ -1,0 +1,18 @@
+{
+  "id": "/tungsura/",
+  "name": "Tungsura Pilkades Kebondowo 2026",
+  "short_name": "Tungsura TPS",
+  "start_url": "https://github.io",
+  "scope": "https://github.io",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#020617",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://github.ioicon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
